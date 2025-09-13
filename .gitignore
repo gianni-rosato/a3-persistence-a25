@@ -1,0 +1,6 @@
+node_modules/
+deno.lock
+package-lock.json
+*.md
+!README.md
+.env
