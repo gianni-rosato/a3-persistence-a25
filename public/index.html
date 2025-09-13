@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TaskRush</title>
+    <meta name="description" content="TaskRush is a task planner app that helps you manage your tasks with priorities, deadlines, and estimates. Create an account to start planning your tasks efficiently.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./styles.css" />
+    <!-- google fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    >
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <header>
+      <h1>TaskRush</h1>
+      <p>Plan quickly. Set your own deadlines for tasks.</p>
+      <nav>
+        <a
+          href="https://validator.w3.org/nu/?doc=https%3A%2F%2Fgiannirosato-a25.onrender.com"
+          target="_blank"
+        >Validate HTML</a>
+        <a
+          href="https://github.com/giannirosato/a2-giannirosato-a25"
+          target="_blank"
+        >Source</a>
+      </nav>
+    </header>
+    <main>
+      <section id="entry-section">
+        <h2 id="form-mode-label">Add Task</h2>
+        <form id="task-form" class="row g-3 align-items-end">
+          <div class="col-12 col-md-6">
+            <label class="form-label">Title
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                maxlength="80"
+                placeholder="Enter task title"
+                class="form-control"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label">Priority
+              <select id="priority" name="priority" required class="form-select">
+                <option value="" disabled selected>Select priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </label>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label">Estimate (hrs)
+              <input
+                type="number"
+                id="estimateHrs"
+                name="estimateHrs"
+                step="0.1"
+                min="0.1"
+                max="100"
+                required
+                placeholder="0.1"
+                class="form-control"
+              />
+            </label>
+          </div>
+          <div class="col-6 col-md-4">
+            <label class="form-label">Deadline (optional)
+              <input type="date" id="deadline" name="deadline" class="form-control" />
+            </label>
+          </div>
+
+          <!-- Additional input types to demonstrate form variety (textarea & checkbox) -->
+          <div class="col-12">
+            <label class="form-label">Notes (optional)
+              <textarea id="notes" name="notes" rows="3" class="form-control" placeholder="Add more details about this task"></textarea>
+            </label>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="1" id="important" name="important">
+              <label class="form-check-label" for="important">
+                Mark as important
+              </label>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-8">
+            <label class="form-label">Status</label>
+            <div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="status-active" value="active" checked>
+                <label class="form-check-label" for="status-active">Active</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="status-backlog" value="backlog">
+                <label class="form-check-label" for="status-backlog">Backlog</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="status-done" value="done">
+                <label class="form-check-label" for="status-done">Done</label>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="edit-id" />
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" id="submit-btn" class="btn btn-primary">Add</button>
+            <button type="button" id="cancel-edit" class="btn btn-secondary d-none">
+              Cancel Edit
+            </button>
+          </div>
+        </form>
+      </section>
+      <section id="results-section">
+        <h2>Current Tasks</h2>
+        <div id="error-container"></div>
+        <table id="tasks-table">
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Est (hrs)</th>
+              <th scope="col">Deadline</th>
+              <th scope="col">Urgency</th>
+              <th scope="col">Notes</th>
+              <th scope="col">Important</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-body">
+            <!-- rows injected dynamically -->
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <footer>
+      <small>&copy; 2025 Gianni Rosato</small>
+    </footer>
+    <script>
+      (function () {
+        const container = document.createElement("div");
+        container.className = "container my-3";
+        container.innerHTML = `
+          <div id="auth-panel" class="card p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 class="h5 mb-0">Account</h2>
+              <div id="auth-controls" class="d-flex gap-2">
+                <button id="logout-btn" class="btn btn-outline-danger btn-sm d-none">Logout</button>
+              </div>
+            </div>
+            <div id="auth-status" class="mb-2">Not logged in</div>
+            <form id="login-form" class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label visually-hidden" for="login-username">Username</label>
+                <input id="login-username" class="form-control" placeholder="username" required />
+              </div>
+              <div class="col-auto">
+                <label class="form-label visually-hidden" for="login-password">Password</label>
+                <input id="login-password" type="password" class="form-control" placeholder="password" required />
+              </div>
+              <div class="col-auto">
+                <button id="login-btn" class="btn btn-success">Login / Create Account</button>
+              </div>
+            </form>
+            <div class="form-text mt-2">
+              If the account does not exist, a new account will be created automatically upon login.
+            </div>
+          </div>
+        `;
+        const main = document.querySelector("main");
+        main.parentNode.insertBefore(container, main);
+
+        const authStatus = document.getElementById("auth-status");
+        const loginForm = document.getElementById("login-form");
+        const logoutBtn = document.getElementById("logout-btn");
+        const authControls = document.getElementById("auth-controls");
+
+        async function setAuthenticated(user) {
+          if (user) {
+            authStatus.textContent = "Logged in as " + user.username;
+            logoutBtn.classList.remove("d-none");
+            loadAppScript();
+          } else {
+            authStatus.textContent = "Not logged in";
+            logoutBtn.classList.add("d-none");
+          }
+        }
+
+        async function login(e) {
+          e.preventDefault();
+          const username = document.getElementById("login-username").value.trim();
+          const password = document.getElementById("login-password").value;
+          if (!username || !password) return;
+          try {
+            const res = await fetch("/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: 'include',
+              body: JSON.stringify({ username, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              authStatus.textContent = data.error || "Login failed";
+              return;
+            }
+            authStatus.textContent = data.username ? "Logged in as " + data.username : "Logged in";
+            logoutBtn.classList.remove("d-none");
+            loadAppScript();
+          } catch (err) {
+            authStatus.textContent = "Network error";
+          }
+        }
+
+        async function logout(e) {
+          e.preventDefault();
+          try {
+            await fetch("/auth/logout", { method: "POST", credentials: 'include' });
+            window.location.reload();
+          } catch (err) {
+            console.error("Logout failed", err);
+            window.location.reload();
+          }
+        }
+
+        loginForm.addEventListener("submit", login);
+        logoutBtn.addEventListener("click", logout);
+
+        fetch("/auth/me", { credentials: 'include' }).then((r) => r.json()).then((json) => {
+          if (json && json.authenticated) {
+            setAuthenticated(json.user);
+          } else {
+            setAuthenticated(null);
+          }
+        }).catch(() => setAuthenticated(null));
+
+        let appScriptLoaded = false;
+        function loadAppScript() {
+          if (appScriptLoaded) return;
+          appScriptLoaded = true;
+          const s = document.createElement("script");
+          s.src = "app.js";
+          s.defer = false;
+          document.body.appendChild(s);
+        }
+
+        document.addEventListener("keydown", (ev) => {
+          if (ev.key === "l" && ev.altKey) {
+            document.getElementById("login-username")?.focus();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
